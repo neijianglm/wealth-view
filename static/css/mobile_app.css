@@ -1,0 +1,189 @@
+/* ============================================================
+   mobile_app.css — 手机 App 外壳（2026-09-01 移动端改造, 09-05 设计统一）
+   ------------------------------------------------------------
+   · 底部 Tab 栏（总览/资产/收益/更多）+「更多」上滑抽屉
+   · 关键表格卡片化（配合模板里的 data-label）
+   · 刘海屏安全区(env safe-area)、PWA standalone 适配
+   · 仅 ≤768px 生效; 桌面端零影响; 本文件最后加载, 覆盖旧移动规则
+   · 配色: fallback 与 style_v2 的 --accent(#2D6BCF) 同族, 不再引入第三种蓝
+   ============================================================ */
+
+/* ---------- 桌面端: 手机组件一律不显示 ---------- */
+.m-tabbar, .m-backdrop, .m-sheet { display: none; }
+
+/* ============================================================
+   表格卡片化: 给 <table class="mobile-cards"> 的行加 data-label
+   桌面端不生效, 只有 ≤768px 才变成卡片
+   ============================================================ */
+@media (max-width: 768px) {
+
+  /* ---------- 1. 旧侧栏(含<640顶条方案)整体退场 ---------- */
+  .sidebar { display: none !important; }
+  :root { --sb-w: 0px !important; }
+  .main {
+    margin-left: 0 !important;
+    padding-top: 0 !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+  }
+  .content {
+    padding: 14px 14px calc(86px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* ---------- 2. 底部 Tab 栏 ---------- */
+  .m-tabbar {
+    display: flex;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1200;
+    background: rgba(255, 255, 255, 0.92);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-top: 1px solid #E5EAF2;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+  .m-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 4px 0; border: none; background: none; cursor: pointer;
+    font-family: inherit; font-size: 10.5px; font-weight: 600;
+    color: #8A97AB; text-decoration: none; -webkit-tap-highlight-color: transparent;
+  }
+  .m-tab svg { width: 22px; height: 22px; }
+  .m-tab { position: relative; }
+  .m-tab.active { color: var(--accent, #2D6BCF); font-weight: 700; }
+  /* active 指示: 顶部短圆点(原生 App 惯例, 比纯变色更醒目) */
+  .m-tab.active::before {
+    content: ''; position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+    width: 16px; height: 3px; border-radius: 0 0 3px 3px;
+    background: var(--accent, #2D6BCF);
+  }
+  .m-tab:active { opacity: .65; }
+
+  /* ---------- 3. 「更多」上滑抽屉 ---------- */
+  .m-backdrop {
+    display: block;
+    position: fixed; inset: 0; z-index: 1300;
+    background: rgba(15, 23, 42, 0.45);
+    opacity: 0; pointer-events: none; transition: opacity .22s ease;
+  }
+  .m-backdrop.open { opacity: 1; pointer-events: auto; }
+  .m-sheet {
+    display: block;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1310;
+    max-height: 72vh; overflow-y: auto;
+    background: #fff; border-radius: 18px 18px 0 0;
+    box-shadow: 0 -8px 32px rgba(16, 24, 40, 0.18);
+    padding: 8px 6px calc(14px + env(safe-area-inset-bottom, 0px));
+    transform: translateY(105%); visibility: hidden;
+    transition: transform .26s cubic-bezier(.32,.72,.35,1), visibility .26s;
+  }
+  .m-sheet.open { transform: translateY(0); visibility: visible; }
+  .m-sheet-handle {
+    width: 38px; height: 4.5px; border-radius: 3px;
+    background: #D6DEEA; margin: 4px auto 10px;
+  }
+  .m-sheet-head {
+    text-align: center; font-size: 12px; font-weight: 700; color: #8A97AB;
+    letter-spacing: .06em; margin-bottom: 8px;
+  }
+  .m-sheet-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 18px; border-radius: 12px;
+    font-size: 15px; font-weight: 600; color: var(--ink-900, #1A2332);
+    text-decoration: none; -webkit-tap-highlight-color: transparent;
+  }
+  .m-sheet-item svg { width: 20px; height: 20px; color: #8A97AB; }
+  .m-sheet-item:active { background: #F2F5FA; }
+  .m-sheet-item.active { color: var(--accent, #2D6BCF); }
+  .m-sheet-item.active svg { color: var(--accent, #2D6BCF); }
+  .m-sheet-sep { height: 1px; background: #EEF1F6; margin: 8px 14px; }
+  .m-sheet-actions { display: flex; gap: 10px; padding: 6px 14px 4px; }
+  .m-act-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+    padding: 11px 0; border: 1px solid #E1E7F0; border-radius: 12px;
+    background: #F7F9FC; color: var(--ink-700, #3D4F61);
+    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .m-act-btn svg { width: 15px; height: 15px; }
+  .m-act-btn:active { background: #EDF1F8; }
+
+  /* ---------- 4. 表格 → 卡片 ---------- */
+  /* 未卡片化的表格恢复容器横向滚动兜底(卡片表 min-width 已清零, 不会出现滚动条) */
+  .section-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.mobile-cards { min-width: 0 !important; }
+  table.mobile-cards thead { display: none; }
+  /* 配置对比表首列(纯色点)在卡片模式下隐藏(勿用通用选择器, 收益表首列是分组标签) */
+  table.dev-table td[data-label=""]:first-child { display: none; }
+  table.mobile-cards, table.mobile-cards tbody { display: block; }
+  table.mobile-cards tr {
+    display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px;
+    background: var(--surface, #fff);
+    border: 1px solid #EDF0F6; border-radius: 13px;
+    margin: 10px 0; padding: 6px 14px 10px;
+  }
+  table.mobile-cards tr.subtotal {
+    background: #F5F8FC; border: 1px dashed #C9D6E8;
+  }
+  table.mobile-cards td { display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    padding: 4.5px 0; border-bottom: none; text-align: right; font-size: 13px; }
+  table.mobile-cards td::before {
+    content: attr(data-label); flex-shrink: 0;
+    font-size: 11px; font-weight: 500; color: #94A3B8; text-align: left;
+  }
+  table.mobile-cards td[data-label=""]::before { content: none; }
+  /* 资产名列: 卡片标题, 独占整行 */
+  table.mobile-cards td.m-name {
+    grid-column: 1 / -1; display: block; text-align: left;
+    font-size: 14.5px; font-weight: 700; padding: 9px 0 2px;
+    color: var(--ink-900, #1A2332); white-space: normal;
+  }
+  /* 分组列: 标题上方的小标签 */
+  table.mobile-cards td.m-group {
+    grid-column: 1 / -1; display: block; text-align: left;
+    font-size: 10.5px; font-weight: 600; color: #9AA7BB;
+    letter-spacing: .04em; padding: 8px 0 0;
+  }
+  /* 明细里的附注行(note)在卡片里收窄字号 */
+  table.mobile-cards td.m-name .muted { font-size: 11px; }
+  /* 操作列(理财台账): 独占一行, 左对齐 */
+  table.mobile-cards td.m-ops { grid-column: 1 / -1; justify-content: flex-start; }
+
+  /* ---------- 5. 卡片阅读比例(收益/理财/配置对比明细) ---------- */
+  table.mobile-cards td { font-size: 13.5px; padding: 5px 0; }
+  table.mobile-cards td.m-name { font-size: 15px; }
+  table.mobile-cards td::before { font-size: 11.5px; }
+
+  /* ---------- 6. KPI / 摘要比例 ---------- */
+  .kpi-row, .kpi-row.quad, .kpi-row.four, .kpi-grid {
+    grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  .kpi-card { padding: 13px 12px; min-width: 0; }
+  .kpi-value { font-size: 17.5px; letter-spacing: -.01em; }
+  .kpi-card .muted, .kpi-foot { font-size: 11px; white-space: normal; line-height: 1.5; }
+  /* 配置页摘要栏 → 2×2 */
+  .summary-bar { flex-wrap: wrap; }
+  .summary-item {
+    flex: 1 1 46%; padding: 13px 16px;
+    border-right: none; border-bottom: 1px solid #EEF1F6;
+  }
+  .summary-item:nth-last-child(-n+2) { border-bottom: none; }
+  .summary-value { font-size: 17px; }
+
+  /* ---------- 7. 账户页: 账户行两行式(名称+余额一行, 标签第二行) ---------- */
+  .bank-head { padding: 12px 16px; flex-wrap: wrap; row-gap: 4px; }
+  .acct-list { padding: 2px 16px; }
+  .acct-row { flex-wrap: wrap; row-gap: 5px; padding: 11px 0; }
+  .acct-main { flex: 1 1 auto; min-width: 0; }
+  .acct-name { white-space: normal; font-size: 13.5px; }
+  .acct-bal { margin-left: auto; text-align: right; }
+  .acct-meta { order: 3; flex: 1 1 100%; flex-wrap: wrap; }
+
+  /* ---------- 8. 工具条堆叠(筛选/搜索) ---------- */
+  .toolbar { flex-wrap: wrap; gap: 8px; }
+  .toolbar .select, .toolbar .search { flex: 1 1 100%; min-width: 0; }
+
+  /* ---------- 9. 杂项打磨 ---------- */
+  .toast { bottom: calc(78px + env(safe-area-inset-bottom, 0px)); }
+  .page-head { margin-bottom: 14px; }
+  .page-head h1 { font-size: 19px; }
+  .gains-note { font-size: 11px; line-height: 1.7; }
+  .bank-card { box-shadow: none; }
+  .footer { margin-bottom: 0; padding: 10px 12px 2px; font-size: 10.5px; }
+}
