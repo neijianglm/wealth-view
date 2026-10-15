@@ -1,0 +1,17 @@
+{
+  "name": "个人财富管理",
+  "short_name": "财富",
+  "description": "个人财富管理看板（数据加密，口令解锁）",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#101826",
+  "theme_color": "#1E3A5F",
+  "icons": [
+    { "src": "static/img/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "static/img/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "static/img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
